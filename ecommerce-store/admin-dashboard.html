@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة التحكم</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <h2>لوحة تحكم الأدمن</h2>
+    <section id="add-product-section">
+      <h3>إضافة منتج</h3>
+      <input type="text" id="product-name" placeholder="اسم المنتج" />
+      <input type="text" id="product-desc" placeholder="وصف المنتج" />
+      <input type="number" id="product-price" placeholder="السعر" />
+      <input type="text" id="product-img" placeholder="رابط الصورة" />
+      <button onclick="addProduct()">إضافة</button>
+    </section>
+    <section id="settings-section">
+      <h3>إعدادات الموقع</h3>
+      <input type="text" id="site-name" placeholder="اسم الموقع" />
+      <input type="text" id="logo-url" placeholder="رابط اللوجو" />
+      <input type="color" id="theme-color" />
+      <input type="text" id="new-password" placeholder="كلمة السر الجديدة" />
+      <button onclick="updateSettings()">حفظ</button>
+    </section>
+    <section id="orders-log">
+      <h3>سجل العمليات</h3>
+      <div id="logs"></div>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

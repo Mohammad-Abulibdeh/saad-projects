@@ -1,0 +1,22 @@
+body {
+  font-family: 'Arial', sans-serif;
+  padding: 20px;
+  direction: rtl;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+main {
+  margin-top: 20px;
+}
+input, button {
+  margin: 5px 0;
+  padding: 8px;
+  font-size: 1em;
+}
+#products-container {
+  display: flex;
+  flex-wrap: wrap;
+}

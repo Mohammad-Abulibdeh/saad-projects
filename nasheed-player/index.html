@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشغل الصوت</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #e74c3c; /* لون أحمر أنيق */
+            --primary-hover: #c0392b; /* لون أحمر داكن */
+            --dark-color: #000000; /* خلفية داكنة */
+            --darker-color: #0a0a0a; /* خلفية أغمق */
+            --light-color: #ffffff; /* نص فاتح */
+            --gray-color: #b3b3b3; /* نص رمادي */
+            --light-bg: #1e1e1e; /* خلفية فاتحة قليلاً */
+            --card-bg: #0c0c0c; /* خلفية العناصر */
+            --shadow-color: rgba(231, 76, 60, 0.2); /* ظل بلون رئيسي */
+            --transition-speed: 0.3s; /* سرعة التحولات */
+            --border-radius: 16px; /* زوايا دائرية */
+            --spacing-sm: 0.5rem; /* تباعد صغير */
+            --spacing-md: 1rem; /* تباعد متوسط */
+            --spacing-lg: 1.5rem; /* تباعد كبير */
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(to bottom, var(--darker-color), var(--light-bg));
+            color: var(--light-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            line-height: 1.6;
+        }
+        
+        .player-wrapper {
+            max-width: 1200px; /* زيادة العرض الأقصى */
+            width: 100%;
+            margin: 0 auto;
+            display: grid;
+            gap: var(--spacing-lg);
+        }
+        
+        .player-container, .lyrics-container {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            box-shadow: 0 8px 32px var(--shadow-color);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+        }
+        
+        .player-container:hover, .lyrics-container:hover {
+            transform: translateY(-5px); /* تحريك العنصر لأعلى */
+            box-shadow: 0 12px 48px var(--shadow-color);
+        }
+        
+        .player-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .album-art {
+            width: 120px;
+            height: 120px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .album-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform var(--transition-speed);
+        }
+        
+        .album-art:hover img {
+            transform: scale(1.1);
+        }
+        
+        .song-info h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+            color: var(--light-color);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .song-details {
+            font-size: 0.95rem;
+            color: var(--gray-color);
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+        
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+        }
+        
+        .main-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        button {
+            background: transparent;
+            color: var(--gray-color);
+            border: none;
+            cursor: pointer;
+            font-size: 1.4rem;
+            padding: var(--spacing-sm);
+            border-radius: 50%;
+            transition: all var(--transition-speed);
+        }
+        
+        button:hover {
+            color: var(--primary-color);
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        button.play-pause {
+            background: var(--primary-color);
+            color: var(--dark-color);
+            width: 60px;
+            height: 60px;
+            font-size: 1.8rem;
+            display: grid;
+            place-items: center;
+        }
+        
+        button.play-pause:hover {
+            background: var(--primary-hover);
+            transform: scale(1.05);
+        }
+        
+        .progress-container {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            margin: var(--spacing-md) 0;
+        }
+        
+        .progress-bar {
+            background: var(--primary-color);
+            height: 100%;
+            border-radius: 4px;
+            width: 0;
+            transition: width 0.1s linear;
+            position: relative;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity var(--transition-speed);
+        }
+        
+        .progress-container:hover .progress-bar::after {
+            opacity: 1;
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .volume-slider {
+            width: 100px;
+            -webkit-appearance: none;
+            height: 4px;
+            background: var(--gray-color);
+            border-radius: 2px;
+            transition: height var(--transition-speed);
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--light-color);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform var(--transition-speed);
+        }
+        
+        .volume-slider:hover {
+            height: 6px;
+        }
+        
+        .volume-slider:hover::-webkit-slider-thumb {
+            transform: scale(1.2);
+        }
+        
+        .lyrics-container {
+            max-height: 400px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--card-bg);
+        }
+        
+        .lyrics-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .lyrics-container::-webkit-scrollbar-track {
+            background: var(--card-bg);
+        }
+        
+        .lyrics-container::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+        
+        .lyrics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .lyrics-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .lyrics-line {
+            padding: var(--spacing-sm) 0;
+            transition: all var(--transition-speed);
+            cursor: pointer;
+        }
+        
+        .lyrics-line:hover {
+            color: var(--primary-color);
+        }
+        
+        .lyrics-line.active {
+            color: var(--primary-color);
+            font-weight: 600;
+            transform: scale(1.02);
+        }
+        
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            color: var(--gray-color);
+            font-size: 0.9rem;
+            margin-top: var(--spacing-sm);
+        }
+        
+        audio {
+            display: none;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            :root {
+                --spacing-lg: 1rem;
+                --spacing-md: 0.75rem;
+            }
+        
+            .player-container, .lyrics-container {
+                padding: var(--spacing-md);
+            }
+        
+            .controls {
+                flex-direction: column;
+                align-items: center;
+                gap: var(--spacing-md);
+            }
+        
+            .volume-control {
+                width: 100%;
+                justify-content: center;
+            }
+        
+            .volume-slider {
+                width: 50%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .player-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        
+            .album-art {
+                width: 150px;
+                height: 150px;
+            }
+        
+            .song-info h2 {
+                font-size: 1.5rem;
+            }
+        
+            .main-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="player-wrapper">
+        <button class="mainmenu">back to main menu</button>
+        <div class="player-container">
+            <div class="player-header">
+                <div class="album-art">
+                    <img src="/images/nasheed_cover.jpg" alt="ألبوم الصورة">
+                </div>
+                <div class="song-info">
+                    <h2 id="songTitle">عنوان النشيد</h2>
+                    <div class="song-details">
+                        <span id="songArtist">المنشد</span>
+                        <span>•</span>
+                        <span id="songDetails">مدة المقطع: 2:36 دقيقة | تاريخ الإضافة: 15-02-2025</span>
+                    </div>
+                </div>
+            </div>
+            
+            <audio id="audioPlayer" src="/audio/nasheed_jihad.mp3"></audio>
+            
+            <div class="controls">
+                <div class="main-controls">
+                    <button id="restartBtn" title="إعادة"><i class="fa-solid fa-circle-notch"></i></button>
+                    <button id="prevBtn" title="السابق"><i class="fa-solid fa-arrow-right-long"></i></button>
+                    <button id="playPauseBtn" class="play-pause" title="تشغيل"><i class="fa-solid fa-play"></i></button>
+                    <button id="nextBtn" title="التالي"><i class="fa-solid fa-arrow-left-long"></i></button>
+                    <button id="loopBtn" title="تكرار"><i class="fa-solid fa-repeat"></i></button>
+                </div>
+                <div class="volume-control">
+                    <button id="muteBtn" title="كتم الصوت"><i class="fa-solid fa-volume-high"></i></button>
+                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+                </div>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+            
+            <div class="time-display">
+                <span id="currentTime">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+        </div>
+        
+        <div class="lyrics-container">
+            <div class="lyrics-header">
+                <div class="lyrics-title">كلمات النشيد</div>
+                <button id="toggleAutoScroll" title="تشغيل التمرير التلقائي"><i class="fa-solid fa-down-long"></i></button>
+            </div>
+            <div class="lyrics-content" id="lyricsContent">
+                <div class="lyrics-placeholder">جاري تحميل كلمات النشيد...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get elements
+            const audioPlayer = document.getElementById('audioPlayer');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const restartBtn = document.getElementById('restartBtn');
+            const muteBtn = document.getElementById('muteBtn');
+            const loopBtn = document.getElementById('loopBtn');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const progressBar = document.getElementById('progressBar');
+            const progressContainer = document.getElementById('progressContainer');
+            const currentTimeDisplay = document.getElementById('currentTime');
+            const durationDisplay = document.getElementById('duration');
+            const lyricsContent = document.getElementById('lyricsContent');
+            const toggleAutoScroll = document.getElementById('toggleAutoScroll');
+            
+            // Initialize state
+            let isPlaying = false;
+            let isMuted = false;
+            let isLooping = false;
+            let autoScroll = true;
+            
+            // Demo lyrics data - would normally be loaded from a server
+            // Note: This is placeholder structure only, not actual content
+            const demoLyrics = [
+    { time: 0, text: "ثائـر ٌ من تـورا بـورا" },
+    { time: 1.9, text: "رامح ٌ مـن قـندهارْ" },
+    { time: 4, text: "مُقبل ٌ من أرض بابل" },
+    { time: 6, text: "صامد ٌ رغم الدمارْ" },
+    { time: 8.5, text: " باذل ٌ من أرض هبهب َ" },
+    { time: 11, text: " بالدما صنع النهارْ" },
+    { time: 13.5, text: "رافـع ٌ وسـط الرمـادي" },
+    { time: 16, text: " بـيـرقا ً للإنتصارْ" },
+    { time: 18, text: "مُشعل ٌ للحرب أضحى" },
+    { time: 20.4, text: " قاتلا ً عبد الصليبْ" },
+    { time: 22.16, text: " راكبـاً هـول َ المنايا" },
+    { time: 25.1, text: " نافحا ً عطرا ً وطيبْ" },
+    { time: 27.14, text: " يملأ الدنيا هزيما ً" },
+    { time: 29.20, text: "يسمع العجب َ العجيبْ!" },
+    { time: 31.25, text: " مُفـتـد ٍ طهر العقيدة" },
+    { time: 34.24, text: " صار في الدنيا غريبْ!!" },
+    { time: 37.09, text: "أخـوة التـوحيـد هيـا"},
+    { time: 38.25, text: "أشعـلـوا كل الثغورْ" },
+    { time: 41.21, text: " جـنـة الرحمن وعـد ٌ" },
+    { time: 43.27, text: " دونه بذل النحورْ" },
+    { time: 46.12, text: " لن يعض ّ الغمدُ عضبا" },
+    { time: 48.17, text: " سلّه ليث ٌ هصورْ" },
+    { time: 50.26, text: " حـثـّه أن الـثـكـالـى" },
+    { time: 53.1, text: "غـال َ عـفـتـهـا كفورْ" },
+    { time: 55.24, text: "لن يشيب بقيد ذل ّ" },
+    { time: 57.14, text: " ضامر ٌ ألِف َ الصهيلْ" },
+    { time: 59.3, text: " يـرتـجـي القتل َ شهيدا ً" },
+    { time: 62.15, text: "باسم الثغر جميلْ" },
+    { time: 64.17, text: " سـره صـوت الحـواري" },
+    { time: 66.27, text: " ويكأن لهـا هديلْ" },
+    { time: 69.28, text: " لا يـُفـزّع يـوم حشـر ٍ" },
+    { time: 71.23, text: " رافـل الظـل الظليلْ" },
+    { time: 74.2, text: "ما محا ذل ّ النواصي" },
+    { time: 76, text: " غير زخات الرصاصْ" },
+    { time: 78.1, text: "فاقـتـلوا أهـل العمالـة" },
+    { time: 80.25, text: " ليس من هذا مناصْ" },
+    { time: 83.09, text: "أهل صندوق الدياثة" },
+    { time: 85.16, text: " أرتجوا فيه الخلاصْ" },
+    { time: 87.20, text: " بالخيانة والتحاصـص" },
+    { time: 89.30, text: " والأمانيّ الرخاصْ" },
+    { time: 92.35, text: "مزقوا الصحوات وارمـوا" },
+    { time: 94.27, text: " كـل زنديق ٍ مهينْ" },
+    { time: 97.05, text: "واركبوا الموت جوادا ً" },
+    { time: 99.14, text: "ضابحا ً في كل حينْ" },
+    { time: 101.24, text: " وازرعـوا في كـل فـج ٍّ" },
+    { time: 104.02, text: " للـعـدا مـوتـا ً يـقـينْ" },
+    { time: 106.02, text: " وامـلأوا الـطـرقات رعبا ً" },
+    { time: 108.21, text: " بالعبـوة والكمينْ" },
+    { time: 110.10, text: "طلـقـوا الدنيا ثلاثا ً" },
+    { time: 113.12, text: " وارتضوا عنها الفِراقْ" },
+    { time: 115.20, text: " نحـن فرسان العقيدة" },
+    { time: 118, text: "نـفـتدي طهر العراقْ" },
+    { time: 120.1, text: " نسمع الحوراء تهمي" },
+    { time: 122.2, text: " نشتهي منها العناقِ" },
+    { time: 124.25, text: " جـذوة الـتـوحـيـد تأبـى" },
+    { time: 127, text: " أن يـخالـطـنا نفاقْ" },
+    { time: 129.15, text: "ثار َ في صدري نحيب ٌ" },
+    { time: 131.16, text: " هزني أني أسير ْ" },
+    { time: 134, text: " أرتجي القتل شهيدا ً" },
+    { time: 136.12, text: " أرقب الفجر المنيرْ" },
+    { time: 138.15, text: " سـاء حكـام الدنـايـا" },
+    { time: 140.13, text: "صيحـتي يوم النفيرْ" },
+    { time: 142.9, text: " أن مولانـا أسـامة" },
+    { time: 145.16, text: " شـيـخـنا وهو الأميرْ" }
+];
+            
+            // Load lyrics into the container
+            function loadLyrics() {
+                lyricsContent.innerHTML = '';
+                demoLyrics.forEach((line, index) => {
+                    const lineElement = document.createElement('div');
+                    lineElement.className = 'lyrics-line';
+                    lineElement.dataset.time = line.time;
+                    lineElement.textContent = line.text;
+                    lineElement.addEventListener('click', () => {
+                        audioPlayer.currentTime = line.time;
+                        if (!isPlaying) {
+                            playAudio();
+                        }
+                    });
+                    lyricsContent.appendChild(lineElement);
+                });
+            }
+            
+            // Update active lyrics based on current time
+            function updateActiveLyrics() {
+                const currentTime = audioPlayer.currentTime;
+                const lines = document.querySelectorAll('.lyrics-line');
+                
+                let activeLineIndex = -1;
+                
+                // Find the current active line
+                for (let i = demoLyrics.length - 1; i >= 0; i--) {
+                    if (currentTime >= demoLyrics[i].time) {
+                        activeLineIndex = i;
+                        break;
+                    }
+                }
+                
+                // Update classes and scroll if needed
+                lines.forEach((line, index) => {
+                    if (index === activeLineIndex) {
+                        line.classList.add('active');
+                        if (autoScroll) {
+                            line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    } else {
+                        line.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Setup event listeners
+            audioPlayer.addEventListener('loadedmetadata', function() {
+                durationDisplay.textContent = formatTime(audioPlayer.duration);
+                loadLyrics();
+            });
+            
+            audioPlayer.addEventListener('timeupdate', function() {
+                // Update progress bar
+                const percentage = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressBar.style.width = percentage + '%';
+                
+                // Update current time display
+                currentTimeDisplay.textContent = formatTime(audioPlayer.currentTime);
+                
+                // Update lyrics highlighting
+                updateActiveLyrics();
+            });
+            
+            audioPlayer.addEventListener('ended', function() {
+                if (isLooping) {
+                    audioPlayer.currentTime = 0;
+                    audioPlayer.play().catch(e => console.error("Error playing audio:", e));
+                } else {
+                    playPauseBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                    isPlaying = false;
+                }
+            });
+            
+            // Playback control functions
+            function playAudio() {
+                audioPlayer.play()
+                    .catch(e => console.error("Error playing audio:", e));
+                playPauseBtn.innerHTML = '<i class="fa-solid fa-stop"></i>';
+                isPlaying = true;
+            }
+            
+            function pauseAudio() {
+                audioPlayer.pause();
+                playPauseBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                isPlaying = false;
+            }
+            
+            // Handle button clicks
+            playPauseBtn.addEventListener('click', function() {
+                if (isPlaying) {
+                    pauseAudio();
+                } else {
+                    playAudio();
+                }
+            });
+            
+            restartBtn.addEventListener('click', function() {
+                audioPlayer.currentTime = 0;
+                if (!isPlaying) {
+                    playAudio();
+                }
+            });
+            
+            prevBtn.addEventListener('click', function() {
+                // In a real app, this would go to previous track
+                audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 10);
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                // In a real app, this would go to next track
+                audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 10);
+            });
+            
+            muteBtn.addEventListener('click', function() {
+                audioPlayer.muted = !audioPlayer.muted;
+                muteBtn.innerHTML = audioPlayer.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+                isMuted = audioPlayer.muted;
+            });
+            
+            loopBtn.addEventListener('click', function() {
+                isLooping = !isLooping;
+                loopBtn.style.color = isLooping ? 'var(--primary-color)' : 'var(--gray-color)';
+                audioPlayer.loop = isLooping;
+            });
+            
+            toggleAutoScroll.addEventListener('click', function() {
+                autoScroll = !autoScroll;
+                toggleAutoScroll.style.color = autoScroll ? 'var(--primary-color)' : 'var(--gray-color)';
+            });
+            
+            // Volume control
+            volumeSlider.addEventListener('input', function() {
+                audioPlayer.volume = this.value;
+                if (this.value > 0 && audioPlayer.muted) {
+                    audioPlayer.muted = false;
+                    muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                }
+            });
+            
+            
+            // Allow clicking on progress bar to seek
+            progressContainer.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                audioPlayer.currentTime = percent * audioPlayer.duration;
+            });
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.code === 'Space') {
+                    // Toggle play/pause with spacebar
+                    playPauseBtn.click();
+                    e.preventDefault();
+                } else if (e.code === 'ArrowLeft') {
+                    // Rewind 5 seconds
+                    audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 5);
+                    e.preventDefault();
+                } else if (e.code === 'ArrowRight') {
+                    // Forward 5 seconds
+                    audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 5);
+                    e.preventDefault();
+                } else if (e.code === 'KeyM') {
+                    // Mute/unmute
+                    muteBtn.click();
+                    e.preventDefault();
+                }
+            });
+            
+            // Helper function to format time
+            function formatTime(seconds) {
+                if (!isFinite(seconds)) return "0:00";
+                
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+        });
+    </script>
+</body>
+</html>

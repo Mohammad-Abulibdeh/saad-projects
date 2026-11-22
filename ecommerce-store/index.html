@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Supabase</title>
+</head>
+<body>
+  <button onclick="sendMessage()">اضغط هنا لاختبار Supabase</button>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    const supabaseUrl = 'YOUR_SUPABASE_URL';
+    const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    async function sendMessage() {
+      const { data, error } = await supabase
+        .from('test_messages') // <-- تأكد من اسم الجدول
+        .insert([{ message: 'تم الإرسال بنجاح 🚀' }]);
+
+      if (error) {
+        alert("❌ خطأ: " + error.message);
+        console.error(error);
+      } else {
+        alert("✅ تم الإرسال بنجاح!");
+        console.log(data);
+      }
+    }
+
+    // جعل الدالة متاحة للزر
+    window.sendMessage = sendMessage;
+  </script>
+</body>
+</html>
